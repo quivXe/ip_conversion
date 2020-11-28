@@ -27,7 +27,7 @@ def bin_to_dec(num):
     return dec
 
 
-def ip_to_bin_ip(ip):
+def ip_to_bin(ip):
     ip_bin = []
     for obj in ip:
         ip_bin.append(dec_to_bin(obj))
@@ -52,30 +52,30 @@ def list_to_ip(lista):
     return ip
 
 
-def ip_to_lista(ip):
-    ip_l = []
+def ip_to_list(ip):
+    lista = []
     tmp = ''
     for let in ip:
         if let != '.':
             tmp += let
         else:
-            ip_l.append(tmp)
+            lista.append(tmp)
             tmp = ''
-    ip_l.append(tmp)
-    return ip_l
+    lista.append(tmp)
+    return lista
 
 
 def adres_sieci(ip, maska):
-    ip = ip_to_bin_ip(ip)
-    maska = ip_to_bin_ip(maska)
+    ip = ip_to_bin(ip)
+    maska = ip_to_bin(maska)
     ip_sieci = []
 
-    for i in range(4):
+    for i in range(len(ip)):
         ip_oktet = ip[i]
         maska_oktet = maska[i]
         adres_sieci_oktet = ''
 
-        for i1 in range(8):
+        for i1 in range(len(ip_oktet)):
             ip_num = ip_oktet[i1]
             maska_num = maska_oktet[i1]
 
@@ -89,17 +89,17 @@ def adres_sieci(ip, maska):
     return ip_sieci
 
 
-def adres_rozgloszeniowy(ip, maska):
-    ip = ip_to_bin_ip(ip)
-    maska = ip_to_bin_ip(maska)
+def adres_broadcast(ip, maska):
+    ip = ip_to_bin(ip)
+    maska = ip_to_bin(maska)
     ip_rozgl = []
 
-    for i in range(4):
+    for i in range(len(ip)):
         ip_oktet = ip[i]
         maska_oktet = maska[i]
         ip_rozgl_oktet = ''
 
-        for i1 in range(8):
+        for i1 in range(len(ip_oktet)):
             ip_num = ip_oktet[i1]
             maska_num = maska_oktet[i1]
 
@@ -114,7 +114,7 @@ def adres_rozgloszeniowy(ip, maska):
 
 
 def maska_to_skrot(maska):
-    maska = ip_to_bin_ip(maska)
+    maska = ip_to_bin(maska)
     n = 0
 
     for oktet in maska:
@@ -147,7 +147,7 @@ def liczba_hostow(maska):
 
 def min_max_host(ip, maska):
     ip_siec = adres_sieci(ip, maska)
-    ip_broadcast = adres_rozgloszeniowy(ip, maska)
+    ip_broadcast = adres_broadcast(ip, maska)
 
     ip_siec[3] += 1
     ip_broadcast[3] -= 1
@@ -172,7 +172,7 @@ def przydzielanie_ip_maskom(ip, maski):
     lista_ip = []
     # tworzenie pierwszego broadcastu zeby zaczac petle (tbh mozna bylo dac to do petli w/e)
     ip_sieci = adres_sieci(ip, maski[0])
-    ip_broadcast = adres_rozgloszeniowy(ip, maski[0])
+    ip_broadcast = adres_broadcast(ip, maski[0])
 
     lista_ip.append((ip_sieci))
     for maska in maski[1:]:
@@ -180,7 +180,7 @@ def przydzielanie_ip_maskom(ip, maski):
         if ip_broadcast[3] != 255:
             ip_broadcast[3] += 1
             ip_sieci = ip_broadcast
-            ip_broadcast = adres_rozgloszeniowy(ip_sieci, maska)
+            ip_broadcast = adres_broadcast(ip_sieci, maska)
 
         # jezeli konczy sie na 255
         elif ip_broadcast[3] == 255:
@@ -189,19 +189,17 @@ def przydzielanie_ip_maskom(ip, maski):
                 ip_broadcast[2] += 1
                 ip_broadcast[3] = 0
                 ip_sieci = ip_broadcast
-                ip_broadcast = adres_rozgloszeniowy(ip_sieci, maska)
-                print('x')
+                ip_broadcast = adres_broadcast(ip_sieci, maska)
 
             # jezeli jest x.x.255.255
             elif ip_broadcast[2] == 255:
-                print('xx')
                 # jezeli nie jest x.255.255.255
                 if ip_broadcast[1] != 255:
                     ip_broadcast[1] += 1
                     ip_broadcast[2] = 0
                     ip_broadcast[3] = 0
                     ip_sieci = ip_broadcast
-                    ip_broadcast = adres_rozgloszeniowy(ip_sieci, maska)
+                    ip_broadcast = adres_broadcast(ip_sieci, maska)
 
                 # jezeli jest x.255.255.255
                 elif ip_broadcast[1] == 255:
@@ -210,7 +208,7 @@ def przydzielanie_ip_maskom(ip, maski):
                     ip_broadcast[2] = 0
                     ip_broadcast[3] = 0
                     ip_sieci = ip_broadcast
-                    ip_broadcast = adres_rozgloszeniowy(ip_sieci, ip_broadcast)
+                    ip_broadcast = adres_broadcast(ip_sieci, ip_broadcast)
 
         lista_ip.append(ip_sieci)
 
@@ -222,10 +220,11 @@ def przydzielanie_hostow_info(hosty, maski, ip_lista):
                'host min', 'host max']]
     for i in range(len(hosty)):
         host = hosty[i]
+        # ip lista to ip
         ip = ip_lista[i]
         maska = maski[i]
 
-        broadcast = adres_rozgloszeniowy(ip, maska)
+        broadcast = adres_broadcast(ip, maska)
         skrot = ' /' + str(maska_to_skrot(maska))
         l_hostow = liczba_hostow(maska)
         min_host, max_host = min_max_host(ip, maska)
@@ -235,7 +234,7 @@ def przydzielanie_hostow_info(hosty, maski, ip_lista):
         broadcast = list_to_ip(broadcast)
         min_host, max_host = list_to_ip(min_host), list_to_ip(max_host)
 
-        tabela.append([str(host), str(ip), str(broadcast), str(maska) + str(skrot), str(l_hostow),
+        tabela.append([czytalne(host), str(ip), str(broadcast), str(maska) + str(skrot), czytalne(l_hostow),
                        str(min_host), str(max_host)])
 
     return tabela
@@ -245,7 +244,7 @@ def podstawowe_info(ip, maska):
     tabela = []
 
     siec = adres_sieci(ip, maska)
-    broadcast = adres_rozgloszeniowy(ip, maska)
+    broadcast = adres_broadcast(ip, maska)
     hosty = liczba_hostow(maska)
     minh, maxh = min_max_host(ip, maska)
     ip = list_to_ip(ip)
@@ -253,10 +252,10 @@ def podstawowe_info(ip, maska):
 
     tabela.append(['IP', str(ip)])
     tabela.append(['maska', str(maska)])
-    tabela.append('======')
+    tabela.append(['=======', '======='])
     tabela.append(['IP sieci', list_to_ip(siec)])
     tabela.append(['IP broadcast', list_to_ip(broadcast)])
-    tabela.append(['hosty', str(hosty)])
+    tabela.append(['hosty', czytalne(hosty)])
     tabela.append(['min host', list_to_ip(minh)])
     tabela.append(['max host', list_to_ip(maxh)])
 
@@ -302,6 +301,8 @@ def tworzenie_tabelki(row_l):
 
 
 def czy_ip_jest_poprawne(ip):
+    if len(ip) != 4:
+        return False
     for oktet in ip:
         oktet = int(oktet)
         if oktet > 255:
@@ -309,130 +310,179 @@ def czy_ip_jest_poprawne(ip):
     return True
 
 
-def funkcje():
-    while True:
-        wybor = input('\nWcisnij 1 żeby przekonwertować IP (maski rowniez) na binarna wersje\n'
-                      '2 żeby przekonwertować binarna wersje IP na normalna\n'
-                      '3 żeby wyświetlić info o IP np jakie IP sieci, jaki broadcast, ile hostow itp\n'
-                      '4 żeby przydzielić urządzeniom podsieci i całe info np IP broadcast host min i max itppp\n'
-                      'lub exit zeby wyjsc\n')
-    # '5 żeby wyświetlić wszystkie dostepne maski z info o nich (np ile hostow itp)\n')
+def czy_poprawna_pisownia(rodzaj, txt):
+    if rodzaj == 2:
+        tmp = 0
+        if len(txt) != 35:
+            return False
+        for digit in txt:
+            if digit == '0' or digit == '1':
+                tmp += 1
+            elif digit == '.':
+                if tmp != 8:
+                    return False
+                tmp = 0
+            else:
+                return False
 
-        # IP to BIN
-        if wybor == '1':
-            print('Wpisz exit zeby wyjsc z petli')
-            while True:
-                ip = input('\nPodaj IP ')
-                if ip == 'exit': break  # jezeli exit to wyjdz
-                ip = ip_to_lista(ip)    # tworzenie listy z ip
-                if czy_ip_jest_poprawne(ip):    # jezeli ip jest poprawne
-                    ip_bin = list_to_ip(ip_to_bin_ip(ip))  # czytelne ip bin
-                    ip = list_to_ip(ip)     # czytelne ip
-                    print('{} - {}'.format(ip, ip_bin))     # wypisanie
-                # jezeli niepoprawne
-                else: print('IP niepoprawne')
+    if rodzaj == 10:
+        tmp = 0
+        liczby = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
+        for digit in txt:
+            if digit in liczby:
+                tmp += 1
 
-        # BIN to IP
-        elif wybor == '2':
-            print('Wpisz exit zeby wyjsc z petli')
-            while True:
-                permisison = True   # do sprawdzania czy sa inee znaki niz . 0 1
-                ip = input('\nPodaj IP binarnie ')
-                if ip == 'exit': break  # wyjscie
-                for num in ip:  # sprawdza czy co innego niz . 0 1
-                    if num != '1' and num != '0' and num != '.': permisison = False
-                ip = ip_to_lista(ip)    # tworzenie listy ip
-                if czy_ip_jest_poprawne(bin_to_ip(ip)) and permisison:  # jezeli poprawne wszystko
-                    ip_ = list_to_ip(bin_to_ip(ip))     # tworzenie czytelnego ip
-                    bin_ip = list_to_ip(ip)     # tworzenie czytelnego bin ip
-                    print('{} - {}'.format(bin_ip, ip_))
-                # jezeli niepoprawne
-                else: print('IP niepoprawne')
+            elif digit == '.':
+                if not 0 < tmp < 4:
+                    return False
 
-        elif wybor == '3':
-            print('Wpisz exit zeby wyjsc z petli')
-            while True:
-                ip = input('\nPodaj IP ')
-                if ip == 'exit': break  # wyjscie
-                maska = input('Podaj maske ')
-                ip, maska = ip_to_lista(ip), ip_to_lista(maska)   # tworzenie listy
-                if maska == 'exit': break   # wyjscie
-                if czy_ip_jest_poprawne(ip) and czy_ip_jest_poprawne(maska):    # jezeli poprawne wszystko
-                    info = podstawowe_info(ip, maska)
-                    tworzenie_tabelki(info)  # stworz tabelke
-                # jezeli niepoprawne
-                else: print('Niepoprawne ip lub maska')
-        # CALA TA FUKNCJA DO ZMIANY I WARTOSCI ZWRACANE PRZEZ FUNKCJE UNORMOWAC NP ZEBY ZAWSZE LISTE ZWRACALY ITP
-        elif wybor == '4':
-            print('Wpisz exit zeby wyjsc')
-            while True:
-                ip = input('\nPodaj IP ')
-                if ip == 'exit': break   # wyjscie
-                maska = input('Podaj maske ')
-                if maska == 'exit': break   # wyjscie
-                ip, maska = ip_to_lista(ip), ip_to_lista(maska)
-                if not czy_ip_jest_poprawne(ip) or not czy_ip_jest_poprawne(maska):     # czy ip i maska poprawne
-                    print('Niepoprawne IP lub maska')
-                    continue
-                try:
-                    n = int(input('Ile ma być podsieci '))
-                    urzadzenia = []
-                    for i in range(n):  # petla na wszystkie podsieci
-                        urzadzenia.append(int(input('Podaj {} urządzenie'.format(i+1))))
-                # blad gdy uzytkownik nie podal int
-                except:
-                    print('Prosze podac poprawna liczbe')
-                    continue
-                wszystkie_maski = przydzielanie_podsieci_hostom(urzadzenia)
-                info = przydzielanie_hostow_info(urzadzenia, wszystkie_maski, ip)
+                else:
+                    tmp = 0
+            else:
+                return False
+
+    return True
+
+
+def czytalne(liczba):
+    liczba = str(liczba)
+    if len(liczba) > 3:
+        liczba = liczba[::-1]
+        tmp = 0
+        rev_liczba = ''
+        for cyfra in liczba:
+            if tmp != 3:
+                rev_liczba += cyfra
+                tmp += 1
+            else:
+                rev_liczba += ' ' + cyfra
+                tmp = 0
+
+        liczba = rev_liczba[::-1]
+
+    return liczba
+
+
+def start():
+    print('Siema tutaj obliczę dla ciebie co chcesz')
+    print('Włącz fullscreena bo tabelki nie beda sie cale wyswietlac i bedzie nieczytelnie ;0\n')
+    print('Wpisz\n'
+          '1- konwersja IP na binarną wersję\n'
+          '2- konwersja binarnej wersji IP na zwykłą\n'
+          '3- informacje na temat danego IP i maski (np. adres sieci adres broadcast ile hostow itp)\n'
+          '4- przydzielanie podsieci urządzeniom\n'
+          '5- wyświetl każdą możliwą maskę wraz z podstawowymi informacjami\n'
+          'exit- wyjście')
+    wybor = input()
+
+    # ip na bin
+    if wybor == '1':
+        ip_text = input('Podaj adres IP: ')
+
+        # jezeli pisowania poprawna
+        if czy_poprawna_pisownia(10, ip_text):
+            ip = ip_to_list(ip_text)
+
+            # jezeli IP jest poprawne
+            if czy_ip_jest_poprawne(ip):
+                ip_bin = ip_to_bin(ip)
+                print('{} - {}'.format(ip_text, list_to_ip(ip_bin)))
+
+            else:
+                print('Niepoprawny adres IP')
+        else:
+            print('Niepoprawny adres IP')
+
+    # bin na ip
+    if wybor == '2':
+        ip_bin_text = input('Podaj adres IP w wersji binarnej: ')
+
+        # jezeli pisowania poprawna
+        if czy_poprawna_pisownia(2, ip_bin_text):
+            ip_bin = ip_to_list(ip_bin_text)
+            ip = bin_to_ip(ip_bin)
+            print('{} - {}'.format(ip_bin_text, list_to_ip(ip)))
+
+        else:
+            print('Niepoprawne IP')
+
+    # info o IP
+    if wybor == '3':
+        ip_text = input('Podaj IP: ')
+        maska_text = input('Podaj maskę: ')
+
+        # czy poprawna pisownia
+        if czy_poprawna_pisownia(10, ip_text) and czy_poprawna_pisownia(10, maska_text):
+            ip = ip_to_list(ip_text)
+            maska = ip_to_list(maska_text)
+
+            # czy poprawne adresy
+            if czy_ip_jest_poprawne(ip) and czy_ip_jest_poprawne(maska):
+                info = podstawowe_info(ip, maska)
                 tworzenie_tabelki(info)
 
-        elif wybor == 'exit': break
-        else: print('Podano nieprawidlowa liczbe')
+            else:
+                print('Niepoprawny adres IP lub maski')
+
+        else:
+            print('Niepoprawny adres IP lub maski')
+
+    # przydzielanie podsieci
+    if wybor == '4':
+        ip_text = input('Podaj adres IP: ')
+
+        # jezeli poprawna pisownia
+        if czy_poprawna_pisownia(10, ip_text):
+            ip = ip_to_list(ip_text)
+
+            # czy poprawne IP
+            if czy_ip_jest_poprawne(ip):
+
+                # przypisywanie hostow
+                try:
+                    n = int(input('Podaj liczbę hostów: '))
+                    if n < 1:
+                        raise ValueError
+                    urzadzenia = []
+                    for i in range(n):
+                        urzadzenia.append(int(input('Podaj {} urządzenie: '.format(i+1))))
+                        if urzadzenia[i] > 2147483646:
+                            raise Exception
+
+                except ValueError as e:
+                    print('Podano nieprawidłową liczbę')
+
+                except Exception:
+                    print('Nieosiągalna liczba hostów')
+
+                # zmienne
+                maski_urzadzen = przydzielanie_podsieci_hostom(urzadzenia)
+                ip_urzadzen = przydzielanie_ip_maskom(ip, maski_urzadzen)
+                info = przydzielanie_hostow_info(urzadzenia, maski_urzadzen,ip_urzadzen)
+                tworzenie_tabelki(info)
+
+            else:
+                print('Niepoprawne IP lub maska')
+
+        else:
+            print('Niepoprawne IP lub maska')
+
+    # wszystkie maski
+    if wybor == '5':
+        tabela = [['maska', 'skrot', 'liczba hostow'],]
+
+        # dla kazdej istniejacej maski
+        for i in range(32):
+            skrot = i + 1
+            maska = skrot_to_maska(skrot)
+            hosty = liczba_hostow(maska)
+
+            tabela.append([list_to_ip(maska), '/'+str(skrot), czytalne(hosty)])
+        tworzenie_tabelki(tabela)
+
+    else:
+        print('Nieprawidłowy wybór')
 
 
-print('Siema tutaj obliczę dla ciebie co chcesz')
-print('Włącz fullscreena bo tabelki nie beda sie cale wyswietlac i bedzie nieczytelnie ;0\n')
-
-funkcje()
-
-#
-#
-#
-#
-#
-#
-#
-#
-# print(adres_sieci(ip, mask))
-# print(adres_rozgloszeniowy(ip, mask))
-# print('/{}'.format(maska_to_skrot(mask)))
-# print(liczba_hostow(mask))
-# print(min_max_host(ip, mask)[0], '-', min_max_host(ip, mask)[1])
-# print('aaa')
-# print(skrot_to_maska(3))
-#
-# print('MASKI')
-# urzadzenia = [1600, 500, 550, 200, 2]
-# ipp = [192, 168, 1, 0]
-# ipp = (255, 100, 255, 245)
-# print(przydzielanie_podsieci_hostom(urzadzenia))
-# maskii = przydzielanie_podsieci_hostom(urzadzenia)
-# ippp = przydzielanie_ip_maskom(ipp, maskii)
-# print(przydzielanie_ip_maskom((255, 100, 255, 245), przydzielanie_podsieci_hostom(urzadzenia)))
-#
-# print('\n\n\n\n')
-# tabela = przydzielanie_hostow_info(urzadzenia, maskii, ippp)
-# tworzenie_tabelki(tabela)
-#
-# """
-# adres IP	192.168.245.10	11000000.10101000.1 1110101.00001010	sieć prywatna RFC1918
-# maska	255.255.128.0 = 17	11111111.11111111.1 0000000.00000000
-# adres sieci	192.168.128.0/17	11000000.10101000.1 0000000.00000000	stara klasa C
-# adres rozgłoszeniowy	192.168.255.255	11000000.10101000.1 1111111.11111111
-# hostów w sieci	32766
-# host min	192.168.128.1	11000000.10101000.1 0000000.00000001
-# host max	192.168.255.254	11000000.10101000.1 1111111.11111110
-# """
-
-
+if __name__ == '__main__':
+    start()
