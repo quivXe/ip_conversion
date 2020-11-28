@@ -371,8 +371,7 @@ def start():
           '2- konwersja binarnej wersji IP na zwykłą\n'
           '3- informacje na temat danego IP i maski (np. adres sieci adres broadcast ile hostow itp)\n'
           '4- przydzielanie podsieci urządzeniom\n'
-          '5- wyświetl każdą możliwą maskę wraz z podstawowymi informacjami\n'
-          'exit- wyjście')
+          '5- wyświetl każdą możliwą maskę wraz z podstawowymi informacjami')
     wybor = input()
 
     # ip na bin
