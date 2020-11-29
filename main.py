@@ -471,12 +471,12 @@ def start():
 
                 # przypisywanie hostow
                 try:
-                    n = int(input('Podaj liczbę hostów: '))
+                    n = int(input('Podaj liczbę podsieci: '))
                     if n < 1:
                         raise ValueError
                     urzadzenia = []
                     for i in range(n):
-                        urzadzenia.append(int(input('Podaj {} urządzenie: '.format(i+1))))
+                        urzadzenia.append(int(input('Podaj l. hostow- podsiec {}: '.format(i+1))))
                         if urzadzenia[i] > 2147483646:
                             raise Exception
 
