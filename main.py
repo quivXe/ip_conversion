@@ -203,12 +203,15 @@ def przydzielanie_ip_maskom(ip, maski):
 
                 # jezeli jest x.255.255.255
                 elif ip_broadcast[1] == 255:
-                    ip_broadcast[0] += 1
-                    ip_broadcast[1] = 0
-                    ip_broadcast[2] = 0
-                    ip_broadcast[3] = 0
-                    ip_sieci = ip_broadcast
-                    ip_broadcast = adres_broadcast(ip_sieci, ip_broadcast)
+                    if ip_broadcast[0] != 255:
+                        ip_broadcast[0] += 1
+                        ip_broadcast[1] = 0
+                        ip_broadcast[2] = 0
+                        ip_broadcast[3] = 0
+                        ip_sieci = ip_broadcast
+                        ip_broadcast = adres_broadcast(ip_sieci, ip_broadcast)
+                    elif ip_broadcast[0] == 255:
+                        return False
 
         lista_ip.append(ip_sieci)
 
@@ -488,9 +491,14 @@ def start():
 
                 # zmienne
                 maski_urzadzen = przydzielanie_podsieci_hostom(urzadzenia)
-                ip_urzadzen = przydzielanie_ip_maskom(ip, maski_urzadzen)
-                info = przydzielanie_hostow_info(urzadzenia, maski_urzadzen,ip_urzadzen)
-                tworzenie_tabelki(info)
+                # sprawdza czy sa dostepne hosty w sieci
+                if przydzielanie_ip_maskom(ip, maski_urzadzen):
+                    ip_urzadzen = przydzielanie_ip_maskom(ip, maski_urzadzen)
+                    info = przydzielanie_hostow_info(urzadzenia, maski_urzadzen,ip_urzadzen)
+                    tworzenie_tabelki(info)
+
+                else:
+                    print('Za mało dostępnych hostów w sieci!')
 
             else:
                 print('Niepoprawne IP lub maska')
