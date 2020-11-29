@@ -59,9 +59,9 @@ def ip_to_list(ip):
         if let != '.':
             tmp += let
         else:
-            lista.append(tmp)
+            lista.append(int(tmp))
             tmp = ''
-    lista.append(tmp)
+    lista.append(int(tmp))
     return lista
 
 
@@ -310,6 +310,16 @@ def czy_ip_jest_poprawne(ip):
     return True
 
 
+def czy_maska_jest_poprawna(maska):
+    maski = []
+    for i in range(32):
+        maski.append(skrot_to_maska(i+1))
+    print(maski)
+    print(maska)
+    if maska in maski: return True
+    return False
+
+
 def czy_poprawna_pisownia(rodzaj, txt):
     if rodzaj == 2:
         tmp = 0
@@ -333,13 +343,16 @@ def czy_poprawna_pisownia(rodzaj, txt):
                 tmp += 1
 
             elif digit == '.':
-                if not 0 < tmp < 4:
+                if tmp < 1 or tmp > 4:
                     return False
 
                 else:
                     tmp = 0
             else:
                 return False
+
+        if tmp < 1 or tmp > 4:
+            return False
 
     return True
 
@@ -393,7 +406,7 @@ def start():
             print('Niepoprawny adres IP')
 
     # bin na ip
-    if wybor == '2':
+    elif wybor == '2':
         ip_bin_text = input('Podaj adres IP w wersji binarnej: ')
 
         # jezeli pisowania poprawna
@@ -406,7 +419,7 @@ def start():
             print('Niepoprawne IP')
 
     # info o IP
-    if wybor == '3':
+    elif wybor == '3':
         ip_text = input('Podaj IP: ')
         maska_text = input('Podaj maskę: ')
 
@@ -416,7 +429,7 @@ def start():
             maska = ip_to_list(maska_text)
 
             # czy poprawne adresy
-            if czy_ip_jest_poprawne(ip) and czy_ip_jest_poprawne(maska):
+            if czy_ip_jest_poprawne(ip) and czy_maska_jest_poprawna(maska):
                 info = podstawowe_info(ip, maska)
                 tworzenie_tabelki(info)
 
@@ -427,7 +440,7 @@ def start():
             print('Niepoprawny adres IP lub maski')
 
     # przydzielanie podsieci
-    if wybor == '4':
+    elif wybor == '4':
         ip_text = input('Podaj adres IP: ')
 
         # jezeli poprawna pisownia
@@ -467,7 +480,7 @@ def start():
             print('Niepoprawne IP lub maska')
 
     # wszystkie maski
-    if wybor == '5':
+    elif wybor == '5':
         tabela = [['maska', 'skrot', 'liczba hostow'],]
 
         # dla kazdej istniejacej maski
@@ -485,3 +498,4 @@ def start():
 
 if __name__ == '__main__':
     start()
+    input('\nNaciśnij enter, żeby wyjść\n')
