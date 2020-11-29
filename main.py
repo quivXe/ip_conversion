@@ -247,11 +247,12 @@ def podstawowe_info(ip, maska):
     broadcast = adres_broadcast(ip, maska)
     hosty = liczba_hostow(maska)
     minh, maxh = min_max_host(ip, maska)
+    skrot = maska_to_skrot(maska)
     ip = list_to_ip(ip)
     maska = list_to_ip(maska)
 
     tabela.append(['IP', str(ip)])
-    tabela.append(['maska', str(maska)])
+    tabela.append(['maska', str(maska) + ' /' + str(skrot)])
     tabela.append(['=======', '======='])
     tabela.append(['IP sieci', list_to_ip(siec)])
     tabela.append(['IP broadcast', list_to_ip(broadcast)])
@@ -354,6 +355,15 @@ def czy_poprawna_pisownia(rodzaj, txt):
         if tmp < 1 or tmp > 4:
             return False
 
+    if rodzaj == 'skrot':
+        try:
+            txt = int(txt)
+            if txt < 0 or txt > 32:
+                return False
+        except ValueError:
+            return False
+
+
     return True
 
 
@@ -421,12 +431,21 @@ def start():
     # info o IP
     elif wybor == '3':
         ip_text = input('Podaj IP: ')
-        maska_text = input('Podaj maskę: ')
+        maska_text = input('Podaj maskę (zapis skrocony lub adres): ')
 
+        # czy podana maska jest skrocona
+        if maska_text[0] == '/':
+            sposob = 'skrot'
+            maska_text = maska_text[1:]
+        else:
+            sposob = 10
         # czy poprawna pisownia
-        if czy_poprawna_pisownia(10, ip_text) and czy_poprawna_pisownia(10, maska_text):
+        if czy_poprawna_pisownia(10, ip_text) and czy_poprawna_pisownia(sposob, maska_text):
             ip = ip_to_list(ip_text)
-            maska = ip_to_list(maska_text)
+            if sposob == 'skrot':
+                maska = skrot_to_maska(maska_text)
+            else:
+                maska = ip_to_list(maska_text)
 
             # czy poprawne adresy
             if czy_ip_jest_poprawne(ip) and czy_maska_jest_poprawna(maska):
