@@ -170,11 +170,11 @@ def przydzielanie_podsieci_hostom(hosty):
 
 def przydzielanie_ip_maskom(ip, maski):
     lista_ip = []
-    # tworzenie pierwszego broadcastu zeby zaczac petle (tbh mozna bylo dac to do petli w/e)
+    # tworzenie pierwszego broadcastu zeby zaczac petle
     ip_sieci = adres_sieci(ip, maski[0])
     ip_broadcast = adres_broadcast(ip, maski[0])
 
-    lista_ip.append((ip_sieci))
+    lista_ip.append(ip_sieci)
     for maska in maski[1:]:
         # jezeli broadcast nie konczy sie na 255 (jezeli sie konczy nie mozna dodac po prostu 1 do adresu sieci)
         if ip_broadcast[3] != 255:
@@ -218,27 +218,46 @@ def przydzielanie_ip_maskom(ip, maski):
     return lista_ip
 
 
-def przydzielanie_hostow_info(hosty, maski, ip_lista):
-    tabela = [['liczba hostów', 'IP podsieci', 'IP broadcast', 'maska', 'hosty maski',
-               'host min', 'host max']]
+def przydzielanie_hostow_info(hosty, maski, ip_lista, kolejnosc):
+    if kolejnosc == 'default':
+        tabela = [['liczba hostów', 'IP podsieci', 'IP broadcast', 'maska', 'hosty maski',
+                   'host min', 'host max']]
+    else:
+        tmp = []
+        for obj in kolejnosc:
+            tmp.append(obj)
+        tabela = [tmp]
+
     for i in range(len(hosty)):
-        host = hosty[i]
+        host = czytalne(hosty[i])
         # ip lista to ip
         ip = ip_lista[i]
         maska = maski[i]
 
         broadcast = adres_broadcast(ip, maska)
         skrot = ' /' + str(maska_to_skrot(maska))
-        l_hostow = liczba_hostow(maska)
+        l_hostow = czytalne(liczba_hostow(maska))
         min_host, max_host = min_max_host(ip, maska)
 
-        ip = list_to_ip(ip)
-        maska = list_to_ip(maska)
-        broadcast = list_to_ip(broadcast)
-        min_host, max_host = list_to_ip(min_host), list_to_ip(max_host)
+        ip = str(list_to_ip(ip))
+        maska = str(list_to_ip(maska))
+        broadcast = str(list_to_ip(broadcast))
+        min_host, max_host = str(list_to_ip(min_host)), str(list_to_ip(max_host))
 
-        tabela.append([czytalne(host), str(ip), str(broadcast), str(maska) + str(skrot), czytalne(l_hostow),
-                       str(min_host), str(max_host)])
+        slownik = {'liczba hostow': host, 'ip': ip, 'broadcast': broadcast, 'maska': maska+skrot, 'hosty maski': l_hostow,
+                   'min': min_host, 'max': max_host}
+
+        if kolejnosc == 'default':
+            tabela.append([host, ip, broadcast, maska + skrot, l_hostow,
+                           min_host, max_host])
+
+        else:
+            tmp = []
+            for obj in kolejnosc:
+                tmp.append(slownik[obj])
+                print(tmp)
+            tabela.append(tmp)
+            print(tabela)
 
     return tabela
 
@@ -483,22 +502,43 @@ def start():
                         if urzadzenia[i] > 2147483646:
                             raise Exception
 
-                except ValueError as e:
+                    # zmienne
+                    maski_urzadzen = przydzielanie_podsieci_hostom(urzadzenia)
+                    # sprawdza czy sa dostepne hosty w sieci
+                    if przydzielanie_ip_maskom(ip, maski_urzadzen):
+                        ip_urzadzen = przydzielanie_ip_maskom(ip, maski_urzadzen)
+                        info = przydzielanie_hostow_info(urzadzenia, maski_urzadzen,ip_urzadzen, 'default')
+                        tworzenie_tabelki(info)
+
+                        # zmiana kolejnosci
+                        if input('Jeżeli chcesz zmienić kolejność wpisz 1\n') == '1':
+                            dostepne = ('liczba hostow', 'ip', 'broadcast', 'maska', 'hosty maski', 'min', 'max')
+                            kolejnosc = []
+                            print('Wpisuj kolumny jedna po drugiej w kolejności jakiej zechcesz lub exit żeby zakonczyc')
+                            print('Dostepne nazwy: {} '.format(tuple(nazwa for nazwa in dostepne)))
+                            while True:
+                                x = input('Podaj kolumnę lub wpisz "exit": ')
+                                if x in dostepne:
+                                    kolejnosc.append(x)
+                                elif x == 'exit':
+                                    if kolejnosc:
+                                        info = przydzielanie_hostow_info(urzadzenia, maski_urzadzen, ip_urzadzen,
+                                                                         kolejnosc)
+                                        tworzenie_tabelki(info)
+                                        break
+                                    else:
+                                        print('Prosze podać chociaż jedną pozycję')
+                                else:
+                                    print('Nieprawidłowa kolumna')
+
+                    else:
+                        print('Za mało dostępnych hostów w sieci!')
+
+                except ValueError:
                     print('Podano nieprawidłową liczbę')
 
                 except Exception:
                     print('Nieosiągalna liczba hostów')
-
-                # zmienne
-                maski_urzadzen = przydzielanie_podsieci_hostom(urzadzenia)
-                # sprawdza czy sa dostepne hosty w sieci
-                if przydzielanie_ip_maskom(ip, maski_urzadzen):
-                    ip_urzadzen = przydzielanie_ip_maskom(ip, maski_urzadzen)
-                    info = przydzielanie_hostow_info(urzadzenia, maski_urzadzen,ip_urzadzen)
-                    tworzenie_tabelki(info)
-
-                else:
-                    print('Za mało dostępnych hostów w sieci!')
 
             else:
                 print('Niepoprawne IP lub maska')
@@ -508,7 +548,7 @@ def start():
 
     # wszystkie maski
     elif wybor == '5':
-        tabela = [['maska', 'skrot', 'liczba hostow'],]
+        tabela = [['maska', 'skrot', 'liczba hostow'], ]
 
         # dla kazdej istniejacej maski
         for i in range(32):
